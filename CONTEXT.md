@@ -40,6 +40,10 @@ _Avoid_: Portal, finish line, objective marker
 An optional collectible hidden in a Level for exploration and completion tracking.
 _Avoid_: Coin, fruit, gem
 
+**Unlocked Level**:
+A Level made available for replay after the player completes the preceding Level.
+_Avoid_: Open stage, available map
+
 **Paint**:
 A color applied to world surfaces by the Chameleon to change traversal, gate, or camouflage meaning.
 _Avoid_: Ink, dye, decal
@@ -115,3 +119,11 @@ _Avoid_: Dashboard, quest log, overlay
 **Orbit Camera**:
 The third-person camera that rotates around the Chameleon with constrained pitch and collision-safe distance.
 _Avoid_: Free camera, fixed camera, cinematic camera
+
+**Ambient Loop**:
+The repeating environmental audio bed for the Jungle Temple.
+_Avoid_: Soundtrack, music system, adaptive score
+
+**Test Mode**:
+A deterministic route or state flag used by browser tests to reach Levels and mechanics without exposing a player-facing debug menu.
+_Avoid_: Debug menu, cheat mode, test build
