@@ -12,6 +12,10 @@ _Avoid_: Player blob, mascot, lizard
 A handcrafted playable space with a start, traversal challenges, paint interactions, and an exit.
 _Avoid_: Map, stage, room
 
+**Jungle Temple**:
+The primary level setting, combining bright jungle readability with temple structures for traversal landmarks.
+_Avoid_: Swamp, lab, test chamber
+
 **Exit**:
 The level goal that completes the current level when the Chameleon reaches it.
 _Avoid_: Portal, finish line, objective marker
@@ -64,6 +68,10 @@ _Avoid_: Mouse click, cursor aim
 The Chameleon's color-matching state used to avoid detection by sentries.
 _Avoid_: Stealth mode, invisibility, disguise
 
+**State Outline**:
+A visible outline or glow around the Chameleon that clarifies the current Paint Color or Camouflage state.
+_Avoid_: Aura, shader effect, status glow
+
 **Sentry**:
 A static level hazard with a vision area that detects the Chameleon when Camouflage does not match the local requirement.
 _Avoid_: Enemy, guard, monster
@@ -75,3 +83,7 @@ _Avoid_: Sight cone, aggro zone, detection field
 **Checkpoint**:
 A saved return point within a Level used after Sentry detection or failed traversal.
 _Avoid_: Save point, respawn, restart
+
+**Play HUD**:
+The compact in-game display for current Paint Color, level goal, Checkpoint feedback, Sentry alert state, and level progress.
+_Avoid_: Dashboard, quest log, overlay
