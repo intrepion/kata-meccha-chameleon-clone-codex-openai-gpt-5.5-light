@@ -12,6 +12,18 @@ _Avoid_: Player blob, mascot, lizard
 A handcrafted playable space with a start, traversal challenges, paint interactions, and an exit.
 _Avoid_: Map, stage, room
 
+**Training Grove**:
+The first Level, focused on movement, camera use, collision, jumping, HUD feedback, and reaching an Exit.
+_Avoid_: Tutorial, Level 1, starter area
+
+**Sentry Shrine**:
+The second Level, focused on Purple Paint, Camouflage, Sentries, Checkpoints, and stealth pressure.
+_Avoid_: Stealth level, Level 2, guard room
+
+**Anchor Falls**:
+The third Level, focused on Orange Paint, Tongue Anchors, Green Paint traversal, and finale movement challenges.
+_Avoid_: Grapple level, Level 3, waterfall room
+
 **Jungle Temple**:
 The primary level setting, combining bright jungle readability with temple structures for traversal landmarks.
 _Avoid_: Swamp, lab, test chamber
@@ -19,6 +31,10 @@ _Avoid_: Swamp, lab, test chamber
 **Exit**:
 The level goal that completes the current level when the Chameleon reaches it.
 _Avoid_: Portal, finish line, objective marker
+
+**Sunfly**:
+An optional collectible hidden in a Level for exploration and completion tracking.
+_Avoid_: Coin, fruit, gem
 
 **Paint**:
 A color applied to world surfaces by the Chameleon to change traversal, gate, or camouflage meaning.
@@ -87,3 +103,7 @@ _Avoid_: Save point, respawn, restart
 **Play HUD**:
 The compact in-game display for current Paint Color, level goal, Checkpoint feedback, Sentry alert state, and level progress.
 _Avoid_: Dashboard, quest log, overlay
+
+**Orbit Camera**:
+The third-person camera that rotates around the Chameleon with constrained pitch and collision-safe distance.
+_Avoid_: Free camera, fixed camera, cinematic camera
