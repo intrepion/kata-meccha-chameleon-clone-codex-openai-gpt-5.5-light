@@ -13,3 +13,5 @@ We will deliver the clone through independently playable MVP slices, committing 
 ## Consequences
 
 Each milestone should include browser evidence appropriate to the slice. Unit tests and builds are useful, but they are not sufficient acceptance evidence for the final playable experience.
+
+The planned slices are movement, camera, and collision first; then paint rules and gates; then Tongue Anchors, Sentries, and the three-level progression.

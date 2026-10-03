@@ -1,6 +1,6 @@
 # Handcrafted level progression
 
-Meccha Chameleon will progress through three short handcrafted levels rather than a single sandbox, procedural run, hub, or score-only loop. This gives the project concrete acceptance evidence: each level can introduce and prove a distinct mechanic while keeping the browser clone small enough to finish with polish.
+Meccha Chameleon will progress through three short handcrafted levels rather than a single sandbox, procedural run, hub, or score-only loop. The first level will teach movement and a paint gate before later levels layer Camouflage, Sentry pressure, Tongue Anchors, and Grip Surfaces. This gives the project concrete acceptance evidence: each level can introduce and prove a distinct mechanic while keeping the browser clone small enough to finish with polish.
 
 ## Considered Options
 
