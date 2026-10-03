@@ -8,6 +8,10 @@ Meccha Chameleon is an original browser game context for a third-person 3D chame
 The player character, a nimble 3D avatar that moves through levels by jumping, painting, camouflaging, and using its tongue.
 _Avoid_: Player blob, mascot, lizard
 
+**Character Controller**:
+The movement model for the Chameleon, including slopes, steps, ledge forgiveness, jumping, and collision.
+_Avoid_: Physics body, rigid body, movement script
+
 **Level**:
 A handcrafted playable space with a start, traversal challenges, paint interactions, and an exit.
 _Avoid_: Map, stage, room
@@ -39,6 +43,10 @@ _Avoid_: Coin, fruit, gem
 **Paint**:
 A color applied to world surfaces by the Chameleon to change traversal, gate, or camouflage meaning.
 _Avoid_: Ink, dye, decal
+
+**Paintable Surface**:
+A marked panel or obvious natural surface that can receive Paint and express a Paint Rule.
+_Avoid_: Any surface, paint zone, target
 
 **Paint Color**:
 A specific rule-bearing color of Paint, such as a color that enables climbing, bouncing, gate power, or camouflage.
