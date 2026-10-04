@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("MVP 1 completes Training Grove through the browser path", async ({ page }) => {
-  await page.goto("/src/vite-dev-entry.html?test");
+  await page.goto("/.vite-entry/index.html?test");
 
   await expect(page.getByTestId("level")).toHaveText("Training Grove");
   await expect(page.getByTestId("goal")).toHaveText("Reach the sunlit exit");
