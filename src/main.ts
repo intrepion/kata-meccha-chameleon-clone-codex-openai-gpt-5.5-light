@@ -102,10 +102,6 @@ message.className = "hud__message";
 message.dataset.testid = "message";
 message.textContent = "Training Grove: move with WASD, orbit with Q/E, jump with Space.";
 document.body.appendChild(message);
-message.className = "hud__message";
-message.dataset.testid = "message";
-message.textContent = "Training Grove: move with WASD, orbit with Q/E, jump with Space.";
-document.body.appendChild(message);
 
 const startOverlay = document.createElement("div");
 startOverlay.className = "start-overlay";
