@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const builtHtml = readFileSync("file-dist/.vite-entry/index.html", "utf8");
@@ -29,9 +29,21 @@ writeFileSync("index.html", directHtml);
 writeFileSync("app.html", directHtml);
 writeFileSync("dev.html", directHtml);
 writeFileSync("src/dev.html", directHtml.replaceAll("./file-dist/", "../file-dist/"));
+writeFileSync(
+  "src/vite-dev-entry.html",
+  directHtml.replaceAll("./file-dist/", "../file-dist/")
+);
 
 mkdirSync("file-dist", { recursive: true });
-copyFileSync("index.html", join("file-dist", "launch.html"));
+writeFileSync(
+  join("file-dist", "launch.html"),
+  directHtml.replaceAll("./file-dist/assets/", "./assets/")
+);
+mkdirSync("file-dist/src", { recursive: true });
+writeFileSync(
+  join("file-dist", "src", "vite-dev-entry.html"),
+  directHtml.replaceAll("./file-dist/assets/", "../assets/")
+);
 rmSync("file-dist/.vite-entry", { recursive: true, force: true });
 
 const readmePath = "README.md";
@@ -42,6 +54,7 @@ const launchSection = `${marker}
 - Double-click \`app.html\` also launches the direct-file build.
 - Double-click \`dev.html\` also launches the direct-file build.
 - Double-click \`src/dev.html\` also launches the direct-file build.
+- Double-click \`src/vite-dev-entry.html\` also launches the direct-file build.
 - Run \`npm run dev\` and open \`/.vite-entry/index.html\` for source development.
 - Run \`npm run build:file\` after source changes to refresh the direct-file bundle.
 `;

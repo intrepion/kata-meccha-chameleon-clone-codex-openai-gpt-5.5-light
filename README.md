@@ -6,5 +6,6 @@
 - Double-click `app.html` also launches the direct-file build.
 - Double-click `dev.html` also launches the direct-file build.
 - Double-click `src/dev.html` also launches the direct-file build.
+- Double-click `src/vite-dev-entry.html` also launches the direct-file build.
 - Run `npm run dev` and open `/.vite-entry/index.html` for source development.
 - Run `npm run build:file` after source changes to refresh the direct-file bundle.
