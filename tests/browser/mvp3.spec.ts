@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("MVP 3 proves sentries, Sunflies, Tongue Anchors, persistence, and all Levels", async ({
   page
 }) => {
-  await page.goto("/?test");
+  await page.goto("/app.html?test");
 
   await page.evaluate(() => window.localStorage.clear());
   await expect(page.getByTestId("level")).toHaveText("Training Grove");

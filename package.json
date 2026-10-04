@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build",
+    "build:file": "tsc && vite build --base ./ --outDir file-dist && node scripts/write-file-index.mjs",
     "test": "vitest run src",
-    "test:browser": "playwright test",
+    "test:browser": "npm run build:file && playwright test",
     "check": "npm run build && npm run test && npm run test:browser"
   },
   "dependencies": {
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.48.1",
+    "@types/node": "^26.6.4",
     "@types/three": "^0.186.0",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
