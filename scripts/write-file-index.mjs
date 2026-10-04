@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-const builtHtml = readFileSync("file-dist/app.html", "utf8");
+const builtHtml = readFileSync("file-dist/dev.html", "utf8");
 
 const rewrittenHtml = builtHtml
   .replaceAll("./assets/", "./file-dist/assets/")
@@ -26,6 +26,7 @@ ${scriptTags.join("")}`
 );
 
 writeFileSync("index.html", directHtml);
+writeFileSync("app.html", directHtml);
 
 mkdirSync("file-dist", { recursive: true });
 copyFileSync("index.html", join("file-dist", "launch.html"));
@@ -35,7 +36,8 @@ const readme = readFileSync(readmePath, "utf8");
 const marker = "## Launch\n";
 const launchSection = `${marker}
 - Double-click \`index.html\` to launch the direct-file build.
-- Run \`npm run dev\` and open \`/app.html\` for source development.
+- Double-click \`app.html\` also launches the direct-file build.
+- Run \`npm run dev\` and open \`/dev.html\` for source development.
 - Run \`npm run build:file\` after source changes to refresh the direct-file bundle.
 `;
 

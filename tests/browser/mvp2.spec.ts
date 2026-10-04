@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("MVP 2 proves paint rules, Gate opening, Grip Surface activation, and HUD updates", async ({
   page
 }) => {
-  await page.goto("/app.html?test");
+  await page.goto("/dev.html?test");
 
   await expect(page.getByTestId("paint")).toHaveText("Green Grip");
 

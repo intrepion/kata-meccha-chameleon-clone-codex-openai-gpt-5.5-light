@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { pathToFileURL } from "node:url";
 
-test("root index launches from file protocol without Vite module CORS failures", async ({
-  page
-}) => {
+for (const fileName of ["index.html", "app.html"]) {
+test(`${fileName} launches from file protocol without Vite module CORS failures`, async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") {
@@ -12,7 +11,7 @@ test("root index launches from file protocol without Vite module CORS failures",
   });
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await page.goto(pathToFileURL(`${process.cwd()}/index.html`).toString());
+  await page.goto(pathToFileURL(`${process.cwd()}/${fileName}`).toString());
 
   await expect(page.getByTestId("level")).toHaveText("Training Grove");
   await expect(page.locator("canvas")).toBeVisible();
@@ -22,3 +21,4 @@ test("root index launches from file protocol without Vite module CORS failures",
   const state = await page.evaluate(() => window.__meccha?.getState());
   expect(state?.levelId).toBe("training-grove");
 });
+}
