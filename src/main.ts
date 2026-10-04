@@ -45,6 +45,8 @@ type MecchaTestApi = {
     collectedSunflies: number;
     sentryAlert: string;
     activeTongueAnchors: string[];
+    facingYaw: number;
+    facingForward: { x: number; z: number };
   };
   moveToExit: () => void;
   paintSurface: (surfaceId: string, paint?: PaintColor) => void;
@@ -519,13 +521,11 @@ const updatePlayer = (dt: number) => {
 
   if (move.lengthSq() > 0) {
     move.normalize();
-    const yaw = new THREE.Euler(0, orbitYaw, 0);
-    move.applyEuler(yaw);
     const previousX = player.position.x;
     const previousZ = player.position.z;
     player.position.x += move.x * dt * 5;
     player.position.z += move.z * dt * 5;
-    chameleon.rotation.y = Math.atan2(move.x, move.z);
+    chameleon.rotation.y = Math.atan2(move.x, move.z) + Math.PI;
     const blockedByGate = level.gates.some((gate) => {
       if (isGateOpen(progress, level, gate)) return false;
       return (
@@ -631,7 +631,12 @@ window.__meccha = {
     activeGripSurfaces: activeGripSurfaces(),
     collectedSunflies: progress.collectedSunflies[level.id].length,
     sentryAlert,
-    activeTongueAnchors: activeTongueAnchors()
+    activeTongueAnchors: activeTongueAnchors(),
+    facingYaw: chameleon.rotation.y,
+    facingForward: {
+      x: -Math.sin(chameleon.rotation.y),
+      z: -Math.cos(chameleon.rotation.y)
+    }
   }),
   moveToExit: () => {
     player.position = { ...level.exit.center };
