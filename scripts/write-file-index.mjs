@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-const builtHtml = readFileSync("file-dist/src/dev.html", "utf8");
+const builtHtml = readFileSync("file-dist/src/vite-dev-entry.html", "utf8");
 
 const rewrittenHtml = builtHtml
   .replace(/(?:\.\.\/|\.\/)assets\//g, "./file-dist/assets/")
@@ -28,6 +28,7 @@ ${scriptTags.join("")}`
 writeFileSync("index.html", directHtml);
 writeFileSync("app.html", directHtml);
 writeFileSync("dev.html", directHtml);
+writeFileSync("src/dev.html", directHtml.replaceAll("./file-dist/", "../file-dist/"));
 
 mkdirSync("file-dist", { recursive: true });
 copyFileSync("index.html", join("file-dist", "launch.html"));
@@ -39,7 +40,8 @@ const launchSection = `${marker}
 - Double-click \`index.html\` to launch the direct-file build.
 - Double-click \`app.html\` also launches the direct-file build.
 - Double-click \`dev.html\` also launches the direct-file build.
-- Run \`npm run dev\` and open \`/src/dev.html\` for source development.
+- Double-click \`src/dev.html\` also launches the direct-file build.
+- Run \`npm run dev\` and open \`/src/vite-dev-entry.html\` for source development.
 - Run \`npm run build:file\` after source changes to refresh the direct-file bundle.
 `;
 
