@@ -19,7 +19,7 @@ test("MVP 1 completes Training Grove through the browser path", async ({ page })
   await page.keyboard.up("e");
 
   const afterMovement = await page.evaluate(() => window.__meccha?.getState());
-  expect(afterMovement?.player.z).toBeLessThan(before?.player.z ?? 0);
+  expect(afterMovement?.player.z).toBeGreaterThan(before?.player.z ?? 0);
 
   await page.evaluate(() => window.__meccha?.moveToExit());
 

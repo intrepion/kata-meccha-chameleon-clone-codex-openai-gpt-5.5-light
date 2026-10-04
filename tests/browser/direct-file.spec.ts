@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { pathToFileURL } from "node:url";
 
+test.describe.configure({ mode: "serial" });
+
 for (const fileName of [
   "index.html",
   "app.html",

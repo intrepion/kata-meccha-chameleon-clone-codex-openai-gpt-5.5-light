@@ -514,9 +514,9 @@ const updatePlayer = (dt: number) => {
   orbitPitch = THREE.MathUtils.clamp(orbitPitch, 0.18, 0.82);
 
   const move = new THREE.Vector3(
-    Number(input.right) - Number(input.left),
+    Number(input.left) - Number(input.right),
     0,
-    Number(input.backward) - Number(input.forward)
+    Number(input.forward) - Number(input.backward)
   );
 
   if (move.lengthSq() > 0) {

@@ -14,18 +14,18 @@ test("WASD movement maps to screen axes and Chameleon faces travel direction", a
   await page.goto("/.vite-entry/index.html?test");
 
   let movement = await pressForMovement(page, "w");
-  expect(movement.after.player.z).toBeLessThan(movement.before.player.z);
-  expect(movement.after.facingForward.z).toBeLessThan(-0.95);
-
-  movement = await pressForMovement(page, "d");
-  expect(movement.after.player.x).toBeGreaterThan(movement.before.player.x);
-  expect(movement.after.facingForward.x).toBeGreaterThan(0.95);
-
-  movement = await pressForMovement(page, "s");
   expect(movement.after.player.z).toBeGreaterThan(movement.before.player.z);
   expect(movement.after.facingForward.z).toBeGreaterThan(0.95);
 
-  movement = await pressForMovement(page, "a");
+  movement = await pressForMovement(page, "d");
   expect(movement.after.player.x).toBeLessThan(movement.before.player.x);
   expect(movement.after.facingForward.x).toBeLessThan(-0.95);
+
+  movement = await pressForMovement(page, "s");
+  expect(movement.after.player.z).toBeLessThan(movement.before.player.z);
+  expect(movement.after.facingForward.z).toBeLessThan(-0.95);
+
+  movement = await pressForMovement(page, "a");
+  expect(movement.after.player.x).toBeGreaterThan(movement.before.player.x);
+  expect(movement.after.facingForward.x).toBeGreaterThan(0.95);
 });
