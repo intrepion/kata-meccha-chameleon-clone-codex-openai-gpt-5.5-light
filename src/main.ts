@@ -4,12 +4,17 @@ import {
   completeLevel,
   createPlayer,
   createProgress,
+  isGateOpen,
+  isGripSurfaceActive,
   levelOrder,
   levels,
   paintLabels,
+  paintSurface,
   type Box,
   type LevelDefinition,
   type LevelId,
+  type PaintableSurface,
+  type PaintColor,
   type PlayerState
 } from "./domain";
 
@@ -29,8 +34,11 @@ type MecchaTestApi = {
     player: { x: number; y: number; z: number };
     completedLevels: LevelId[];
     currentPaint: string;
+    gateOpen: boolean;
+    activeGripSurfaces: string[];
   };
   moveToExit: () => void;
+  paintSurface: (surfaceId: string, paint?: PaintColor) => void;
   setLevel: (levelId: LevelId) => void;
 };
 
@@ -82,6 +90,10 @@ message.className = "hud__message";
 message.dataset.testid = "message";
 message.textContent = "Training Grove: move with WASD, orbit with Q/E, jump with Space.";
 document.body.appendChild(message);
+message.className = "hud__message";
+message.dataset.testid = "message";
+message.textContent = "Training Grove: move with WASD, orbit with Q/E, jump with Space.";
+document.body.appendChild(message);
 
 const startOverlay = document.createElement("div");
 startOverlay.className = "start-overlay";
@@ -103,6 +115,10 @@ let player: PlayerState = createPlayer(level);
 let chameleon: THREE.Group;
 let worldGroup = new THREE.Group();
 let exitMesh: THREE.Mesh;
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const paintableMeshes = new Map<string, THREE.Mesh>();
+const gateMeshes = new Map<string, THREE.Mesh>();
 let orbitYaw = -Math.PI / 2;
 let orbitPitch = 0.42;
 let gameStarted = isTestMode;
@@ -125,6 +141,12 @@ const makeBoxMesh = (box: Box, color: number): THREE.Mesh => {
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   return mesh;
+};
+
+const paintColorHex: Record<PaintColor, number> = {
+  green: 0x70d65c,
+  purple: 0x8f63e9,
+  orange: 0xf28c28
 };
 
 const createChameleon = (): THREE.Group => {
@@ -202,6 +224,8 @@ const loadLevel = (levelId: LevelId) => {
   player = createPlayer(level);
   scene.remove(worldGroup);
   worldGroup = new THREE.Group();
+  paintableMeshes.clear();
+  gateMeshes.clear();
   scene.add(worldGroup);
 
   level.platforms.forEach((platform, index) => {
@@ -211,6 +235,22 @@ const loadLevel = (levelId: LevelId) => {
   exitMesh = makeBoxMesh(level.exit, 0xf2c14e);
   exitMesh.name = "Exit";
   worldGroup.add(exitMesh);
+
+  level.paintableSurfaces.forEach((surface) => {
+    const mesh = makeBoxMesh(surface.box, 0xd6e39e);
+    mesh.name = surface.id;
+    mesh.userData.surfaceId = surface.id;
+    paintableMeshes.set(surface.id, mesh);
+    worldGroup.add(mesh);
+  });
+
+  level.gates.forEach((gate) => {
+    const mesh = makeBoxMesh(gate.box, 0x7c6b45);
+    mesh.name = gate.id;
+    gateMeshes.set(gate.id, mesh);
+    worldGroup.add(mesh);
+  });
+
   decorateWorld();
 
   if (chameleon) {
@@ -219,6 +259,7 @@ const loadLevel = (levelId: LevelId) => {
   chameleon = createChameleon();
   scene.add(chameleon);
   updateHud();
+  updatePaintMeshes();
 };
 
 const updateHud = () => {
@@ -233,6 +274,44 @@ const updateHud = () => {
   if (progressText) {
     progressText.textContent = `${progress.completedLevels.length} / ${levelOrder.length} Levels`;
   }
+};
+
+const getSurface = (surfaceId: string): PaintableSurface | undefined =>
+  level.paintableSurfaces.find((surface) => surface.id === surfaceId);
+
+const activeGripSurfaces = (): string[] =>
+  level.paintableSurfaces
+    .filter((surface) => isGripSurfaceActive(progress, surface))
+    .map((surface) => surface.id);
+
+const updatePaintMeshes = () => {
+  level.paintableSurfaces.forEach((surface) => {
+    const mesh = paintableMeshes.get(surface.id);
+    if (!mesh) return;
+    const painted = progress.paintedSurfaces[surface.id];
+    const material = mesh.material;
+    if (material instanceof THREE.MeshStandardMaterial) {
+      material.color.setHex(painted ? paintColorHex[painted] : 0xd6e39e);
+      material.emissive.setHex(isGripSurfaceActive(progress, surface) ? 0x1f6f2e : 0x000000);
+    }
+  });
+
+  level.gates.forEach((gate) => {
+    const mesh = gateMeshes.get(gate.id);
+    if (!mesh) return;
+    const open = isGateOpen(progress, level, gate);
+    mesh.visible = !open;
+    mesh.position.y = open ? -20 : gate.box.center.y;
+  });
+};
+
+const applyPaintToSurface = (surfaceId: string, paint = player.currentPaint) => {
+  const surface = getSurface(surfaceId);
+  if (!surface) return;
+  progress = paintSurface(progress, surface, paint);
+  message.textContent = `${surface.label} painted ${paintLabels[paint]}.`;
+  updatePaintMeshes();
+  updateHud();
 };
 
 const finishLevelIfReady = () => {
@@ -280,9 +359,22 @@ const updatePlayer = (dt: number) => {
     move.normalize();
     const yaw = new THREE.Euler(0, orbitYaw, 0);
     move.applyEuler(yaw);
+    const previousX = player.position.x;
+    const previousZ = player.position.z;
     player.position.x += move.x * dt * 5;
     player.position.z += move.z * dt * 5;
     chameleon.rotation.y = Math.atan2(move.x, move.z);
+    const blockedByGate = level.gates.some((gate) => {
+      if (isGateOpen(progress, level, gate)) return false;
+      return (
+        Math.abs(player.position.x - gate.box.center.x) <= gate.box.size.x / 2 + 0.45 &&
+        Math.abs(player.position.z - gate.box.center.z) <= gate.box.size.z / 2 + 0.45
+      );
+    });
+    if (blockedByGate) {
+      player.position.x = previousX;
+      player.position.z = previousZ;
+    }
   }
 
   if (input.jump && player.grounded) {
@@ -303,6 +395,18 @@ const updatePlayer = (dt: number) => {
   clampToWorld();
   chameleon.position.set(player.position.x, player.position.y, player.position.z);
   finishLevelIfReady();
+};
+
+const handlePaintClick = (event: PointerEvent) => {
+  if (!gameStarted || paintableMeshes.size === 0) return;
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects([...paintableMeshes.values()], false);
+  const surfaceId = hits[0]?.object.userData.surfaceId;
+  if (typeof surfaceId === "string") {
+    applyPaintToSurface(surfaceId);
+  }
 };
 
 const updateCamera = () => {
@@ -334,11 +438,19 @@ const onKey = (event: KeyboardEvent, pressed: boolean) => {
   if (key === " ") input.jump = pressed;
   if (key === "q") input.orbitLeft = pressed;
   if (key === "e") input.orbitRight = pressed;
+  if (pressed && key === "1") player.currentPaint = "green";
+  if (pressed && key === "2") player.currentPaint = "purple";
+  if (pressed && key === "3") player.currentPaint = "orange";
+  if (pressed && ["1", "2", "3"].includes(key)) {
+    message.textContent = `Selected ${paintLabels[player.currentPaint]}.`;
+    updateHud();
+  }
 };
 
 window.addEventListener("keydown", (event) => onKey(event, true));
 window.addEventListener("keyup", (event) => onKey(event, false));
 window.addEventListener("resize", resize);
+renderer.domElement.addEventListener("pointerdown", handlePaintClick);
 
 startOverlay.querySelector("button")?.addEventListener("click", () => {
   gameStarted = true;
@@ -350,12 +462,18 @@ window.__meccha = {
     levelId: level.id,
     player: { ...player.position },
     completedLevels: [...progress.completedLevels],
-    currentPaint: player.currentPaint
+    currentPaint: player.currentPaint,
+    gateOpen: level.gates.every((gate) => isGateOpen(progress, level, gate)),
+    activeGripSurfaces: activeGripSurfaces()
   }),
   moveToExit: () => {
     player.position = { ...level.exit.center };
     chameleon.position.set(player.position.x, player.position.y, player.position.z);
     finishLevelIfReady();
+  },
+  paintSurface: (surfaceId: string, paint = player.currentPaint) => {
+    player.currentPaint = paint;
+    applyPaintToSurface(surfaceId, paint);
   },
   setLevel: (levelId: LevelId) => {
     progress = { ...progress, levelId };
