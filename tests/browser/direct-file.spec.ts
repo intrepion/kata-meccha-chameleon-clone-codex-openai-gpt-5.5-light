@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { pathToFileURL } from "node:url";
 
-for (const fileName of ["index.html", "app.html"]) {
+for (const fileName of ["index.html", "app.html", "dev.html"]) {
 test(`${fileName} launches from file protocol without Vite module CORS failures`, async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => {
