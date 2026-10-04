@@ -2,14 +2,20 @@ import "./style.css";
 import * as THREE from "three";
 import {
   completeLevel,
+  collectSunfly,
   createPlayer,
   createProgress,
   isGateOpen,
   isGripSurfaceActive,
+  isInsideBox,
+  isSentryDetection,
+  isTongueAnchorActive,
   levelOrder,
   levels,
   paintLabels,
   paintSurface,
+  resetToCheckpoint,
+  useTongueAnchor,
   type Box,
   type LevelDefinition,
   type LevelId,
@@ -36,9 +42,15 @@ type MecchaTestApi = {
     currentPaint: string;
     gateOpen: boolean;
     activeGripSurfaces: string[];
+    collectedSunflies: number;
+    sentryAlert: string;
+    activeTongueAnchors: string[];
   };
   moveToExit: () => void;
   paintSurface: (surfaceId: string, paint?: PaintColor) => void;
+  collectSunfly: (index: number) => void;
+  triggerSentry: (sentryId: string) => void;
+  useTongueAnchor: (anchorId: string) => void;
   setLevel: (levelId: LevelId) => void;
 };
 
@@ -119,9 +131,14 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 const paintableMeshes = new Map<string, THREE.Mesh>();
 const gateMeshes = new Map<string, THREE.Mesh>();
+const sunflyMeshes = new Map<number, THREE.Mesh>();
+const sentryMeshes = new Map<string, THREE.Mesh>();
+const tongueAnchorMeshes = new Map<string, THREE.Mesh>();
 let orbitYaw = -Math.PI / 2;
 let orbitPitch = 0.42;
 let gameStarted = isTestMode;
+let sentryAlert = "Clear";
+let audioContext: AudioContext | undefined;
 
 const input: InputState = {
   forward: false,
@@ -147,6 +164,47 @@ const paintColorHex: Record<PaintColor, number> = {
   green: 0x70d65c,
   purple: 0x8f63e9,
   orange: 0xf28c28
+};
+
+const storageKey = "meccha-chameleon-progress";
+
+const playTone = (frequency: number, duration = 0.08) => {
+  if (isTestMode) return;
+  audioContext ??= new AudioContext();
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  oscillator.frequency.value = frequency;
+  oscillator.type = "triangle";
+  gain.gain.setValueAtTime(0.06, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+  oscillator.connect(gain).connect(audioContext.destination);
+  oscillator.start();
+  oscillator.stop(audioContext.currentTime + duration);
+};
+
+const saveProgress = () => {
+  window.localStorage.setItem(
+    storageKey,
+    JSON.stringify({
+      completedLevels: progress.completedLevels,
+      collectedSunflies: progress.collectedSunflies
+    })
+  );
+};
+
+const restoreProgress = () => {
+  const saved = window.localStorage.getItem(storageKey);
+  if (!saved) return;
+  try {
+    const parsed = JSON.parse(saved) as Partial<typeof progress>;
+    progress = {
+      ...progress,
+      completedLevels: parsed.completedLevels ?? progress.completedLevels,
+      collectedSunflies: parsed.collectedSunflies ?? progress.collectedSunflies
+    };
+  } catch {
+    window.localStorage.removeItem(storageKey);
+  }
 };
 
 const createChameleon = (): THREE.Group => {
@@ -222,10 +280,14 @@ const decorateWorld = () => {
 const loadLevel = (levelId: LevelId) => {
   level = levels[levelId];
   player = createPlayer(level);
+  sentryAlert = "Clear";
   scene.remove(worldGroup);
   worldGroup = new THREE.Group();
   paintableMeshes.clear();
   gateMeshes.clear();
+  sunflyMeshes.clear();
+  sentryMeshes.clear();
+  tongueAnchorMeshes.clear();
   scene.add(worldGroup);
 
   level.platforms.forEach((platform, index) => {
@@ -248,6 +310,44 @@ const loadLevel = (levelId: LevelId) => {
     const mesh = makeBoxMesh(gate.box, 0x7c6b45);
     mesh.name = gate.id;
     gateMeshes.set(gate.id, mesh);
+    worldGroup.add(mesh);
+  });
+
+  const sunflyMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf9f871,
+    emissive: 0x665900,
+    roughness: 0.35
+  });
+  level.sunflies.forEach((sunfly, index) => {
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 10), sunflyMaterial.clone());
+    mesh.position.set(sunfly.x, sunfly.y, sunfly.z);
+    mesh.name = `sunfly-${index}`;
+    mesh.castShadow = true;
+    sunflyMeshes.set(index, mesh);
+    worldGroup.add(mesh);
+  });
+
+  level.sentries.forEach((sentry) => {
+    const base = makeBoxMesh(sentry.vision, 0x8f63e9);
+    base.name = sentry.id;
+    base.material = new THREE.MeshStandardMaterial({
+      color: 0x8f63e9,
+      transparent: true,
+      opacity: 0.26,
+      roughness: 0.8
+    });
+    sentryMeshes.set(sentry.id, base);
+    worldGroup.add(base);
+  });
+
+  level.tongueAnchors.forEach((anchor) => {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.32, 18, 12),
+      new THREE.MeshStandardMaterial({ color: 0xf28c28, emissive: 0x562500 })
+    );
+    mesh.position.set(anchor.position.x, anchor.position.y, anchor.position.z);
+    mesh.name = anchor.id;
+    tongueAnchorMeshes.set(anchor.id, mesh);
     worldGroup.add(mesh);
   });
 
@@ -284,6 +384,11 @@ const activeGripSurfaces = (): string[] =>
     .filter((surface) => isGripSurfaceActive(progress, surface))
     .map((surface) => surface.id);
 
+const activeTongueAnchors = (): string[] =>
+  level.tongueAnchors
+    .filter((anchor) => isTongueAnchorActive(progress, level, anchor))
+    .map((anchor) => anchor.id);
+
 const updatePaintMeshes = () => {
   level.paintableSurfaces.forEach((surface) => {
     const mesh = paintableMeshes.get(surface.id);
@@ -303,6 +408,19 @@ const updatePaintMeshes = () => {
     mesh.visible = !open;
     mesh.position.y = open ? -20 : gate.box.center.y;
   });
+
+  sunflyMeshes.forEach((mesh, index) => {
+    mesh.visible = !progress.collectedSunflies[level.id].includes(index);
+  });
+
+  level.tongueAnchors.forEach((anchor) => {
+    const mesh = tongueAnchorMeshes.get(anchor.id);
+    if (!mesh) return;
+    const material = mesh.material;
+    if (material instanceof THREE.MeshStandardMaterial) {
+      material.emissive.setHex(isTongueAnchorActive(progress, level, anchor) ? 0xaa4f00 : 0x1c1205);
+    }
+  });
 };
 
 const applyPaintToSurface = (surfaceId: string, paint = player.currentPaint) => {
@@ -314,10 +432,58 @@ const applyPaintToSurface = (surfaceId: string, paint = player.currentPaint) => 
   updateHud();
 };
 
+const collectSunfliesIfReady = () => {
+  const nextProgress = collectSunfly(progress, level, player);
+  if (nextProgress !== progress) {
+    progress = nextProgress;
+    message.textContent = `Sunfly collected in ${level.name}.`;
+    playTone(880);
+    saveProgress();
+    updatePaintMeshes();
+    updateHud();
+  }
+};
+
+const checkSentryDetection = () => {
+  const watching = level.sentries.find((sentry) => isInsideBox(player.position, sentry.vision));
+  if (watching && !isSentryDetection(watching, player, player.currentPaint)) {
+    sentryAlert = "Clear";
+    updateHud();
+    return;
+  }
+  const detected = level.sentries.find((sentry) =>
+    isSentryDetection(sentry, player, player.currentPaint)
+  );
+  if (!detected) return;
+  player = resetToCheckpoint(player, detected);
+  sentryAlert = detected.label;
+  message.textContent = `${detected.label} spotted the wrong camouflage. Back to checkpoint.`;
+  playTone(180, 0.16);
+  chameleon.position.set(player.position.x, player.position.y, player.position.z);
+  updateHud();
+};
+
+const activateTongueAnchor = (anchorId: string) => {
+  const anchor = level.tongueAnchors.find((candidate) => candidate.id === anchorId);
+  if (!anchor) return;
+  const nextPlayer = useTongueAnchor(progress, level, player, anchor);
+  if (nextPlayer === player) {
+    message.textContent = `${anchor.label} needs Orange Paint.`;
+    return;
+  }
+  player = nextPlayer;
+  message.textContent = `${anchor.label} pulled the Chameleon across.`;
+  playTone(520);
+  chameleon.position.set(player.position.x, player.position.y, player.position.z);
+  updateHud();
+};
+
 const finishLevelIfReady = () => {
   const nextProgress = completeLevel(progress, level, player);
   if (nextProgress !== progress) {
     progress = nextProgress;
+    saveProgress();
+    playTone(660, 0.12);
     message.textContent = `${level.name} complete. ${progress.levelId === level.id ? "All levels complete." : "Next level unlocked."}`;
     if (progress.levelId !== level.id) {
       loadLevel(progress.levelId);
@@ -394,6 +560,8 @@ const updatePlayer = (dt: number) => {
 
   clampToWorld();
   chameleon.position.set(player.position.x, player.position.y, player.position.z);
+  collectSunfliesIfReady();
+  checkSentryDetection();
   finishLevelIfReady();
 };
 
@@ -464,7 +632,10 @@ window.__meccha = {
     completedLevels: [...progress.completedLevels],
     currentPaint: player.currentPaint,
     gateOpen: level.gates.every((gate) => isGateOpen(progress, level, gate)),
-    activeGripSurfaces: activeGripSurfaces()
+    activeGripSurfaces: activeGripSurfaces(),
+    collectedSunflies: progress.collectedSunflies[level.id].length,
+    sentryAlert,
+    activeTongueAnchors: activeTongueAnchors()
   }),
   moveToExit: () => {
     player.position = { ...level.exit.center };
@@ -475,12 +646,29 @@ window.__meccha = {
     player.currentPaint = paint;
     applyPaintToSurface(surfaceId, paint);
   },
+  collectSunfly: (index: number) => {
+    const sunfly = level.sunflies[index];
+    if (!sunfly) return;
+    player.position = { ...sunfly };
+    collectSunfliesIfReady();
+  },
+  triggerSentry: (sentryId: string) => {
+    const sentry = level.sentries.find((candidate) => candidate.id === sentryId);
+    if (!sentry) return;
+    player.position = { ...sentry.vision.center };
+    chameleon.position.set(player.position.x, player.position.y, player.position.z);
+    checkSentryDetection();
+  },
+  useTongueAnchor: (anchorId: string) => {
+    activateTongueAnchor(anchorId);
+  },
   setLevel: (levelId: LevelId) => {
     progress = { ...progress, levelId };
     loadLevel(levelId);
   }
 };
 
+restoreProgress();
 loadLevel("training-grove");
 resize();
 

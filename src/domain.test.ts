@@ -6,8 +6,12 @@ import {
   createProgress,
   isGateOpen,
   isGripSurfaceActive,
+  isSentryDetection,
+  isTongueAnchorActive,
   levels,
-  paintSurface
+  paintSurface,
+  resetToCheckpoint,
+  useTongueAnchor
 } from "./domain";
 
 describe("Meccha Chameleon domain", () => {
@@ -71,5 +75,34 @@ describe("Meccha Chameleon domain", () => {
 
     const painted = paintSurface(progress, gripSurface, "green");
     expect(isGripSurfaceActive(painted, gripSurface)).toBe(true);
+  });
+
+  it("resets the Chameleon to a Checkpoint when a Sentry detects wrong Camouflage", () => {
+    const level = levels["sentry-shrine"];
+    const sentry = level.sentries[0];
+    const player = createPlayer(level);
+
+    player.position = { ...sentry.vision.center };
+
+    expect(isSentryDetection(sentry, player, "green")).toBe(true);
+    expect(isSentryDetection(sentry, player, "purple")).toBe(false);
+    expect(resetToCheckpoint(player, sentry).position).toEqual(sentry.checkpoint);
+  });
+
+  it("moves the Chameleon with an active Tongue Anchor", () => {
+    const level = levels["anchor-falls"];
+    const anchor = level.tongueAnchors[0];
+    const panel = level.paintableSurfaces.find((surface) => surface.id === anchor.panelSurfaceId);
+    const player = createPlayer(level);
+    const progress = createProgress(level.id);
+
+    if (!panel) throw new Error("Missing anchor panel");
+
+    expect(isTongueAnchorActive(progress, level, anchor)).toBe(false);
+    expect(useTongueAnchor(progress, level, player, anchor)).toEqual(player);
+
+    const painted = paintSurface(progress, panel, "orange");
+    expect(isTongueAnchorActive(painted, level, anchor)).toBe(true);
+    expect(useTongueAnchor(painted, level, player, anchor).position).toEqual(anchor.landing);
   });
 });

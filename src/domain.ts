@@ -29,6 +29,22 @@ export type Gate = {
   switchSurfaceId: string;
 };
 
+export type Sentry = {
+  id: string;
+  label: string;
+  vision: Box;
+  requiredPaint: PaintColor;
+  checkpoint: Vec3;
+};
+
+export type TongueAnchor = {
+  id: string;
+  label: string;
+  position: Vec3;
+  panelSurfaceId: string;
+  landing: Vec3;
+};
+
 export type LevelDefinition = {
   id: LevelId;
   name: string;
@@ -39,6 +55,8 @@ export type LevelDefinition = {
   sunflies: Vec3[];
   paintableSurfaces: PaintableSurface[];
   gates: Gate[];
+  sentries: Sentry[];
+  tongueAnchors: TongueAnchor[];
 };
 
 export type PlayerState = {
@@ -116,7 +134,9 @@ export const levels: Record<LevelId, LevelDefinition> = {
           size: { x: 0.5, y: 2.5, z: 4.2 }
         }
       }
-    ]
+    ],
+    sentries: [],
+    tongueAnchors: []
   },
   "sentry-shrine": {
     id: "sentry-shrine",
@@ -135,8 +155,32 @@ export const levels: Record<LevelId, LevelDefinition> = {
       { x: 2, y: 1.1, z: -3.4 },
       { x: 6, y: 1.1, z: 3.2 }
     ],
-    paintableSurfaces: [],
-    gates: []
+    paintableSurfaces: [
+      {
+        id: "sentry-shrine-camouflage-panel",
+        label: "Shrine camouflage panel",
+        kind: "camouflage-panel",
+        requiredPaint: "purple",
+        box: {
+          center: { x: -3.8, y: 0.35, z: -3.6 },
+          size: { x: 1.5, y: 0.2, z: 1.5 }
+        }
+      }
+    ],
+    gates: [],
+    sentries: [
+      {
+        id: "shrine-watch",
+        label: "Shrine Watch",
+        requiredPaint: "purple",
+        checkpoint: { x: -8, y: 1.1, z: 0 },
+        vision: {
+          center: { x: 1.5, y: 1.1, z: 0 },
+          size: { x: 4.2, y: 2.2, z: 5.8 }
+        }
+      }
+    ],
+    tongueAnchors: []
   },
   "anchor-falls": {
     id: "anchor-falls",
@@ -156,8 +200,39 @@ export const levels: Record<LevelId, LevelDefinition> = {
       { x: 1, y: 2.2, z: 0 },
       { x: 7, y: 2.4, z: 2.8 }
     ],
-    paintableSurfaces: [],
-    gates: []
+    paintableSurfaces: [
+      {
+        id: "anchor-falls-orange-panel",
+        label: "Falls anchor panel",
+        kind: "anchor-panel",
+        requiredPaint: "orange",
+        box: {
+          center: { x: -2.2, y: 0.35, z: -3.8 },
+          size: { x: 1.5, y: 0.2, z: 1.5 }
+        }
+      },
+      {
+        id: "anchor-falls-green-grip",
+        label: "Falls grip panel",
+        kind: "grip-panel",
+        requiredPaint: "green",
+        box: {
+          center: { x: 5.8, y: 1.95, z: -1.5 },
+          size: { x: 1.5, y: 0.2, z: 1.5 }
+        }
+      }
+    ],
+    gates: [],
+    sentries: [],
+    tongueAnchors: [
+      {
+        id: "falls-tongue-anchor",
+        label: "Falls Tongue Anchor",
+        panelSurfaceId: "anchor-falls-orange-panel",
+        position: { x: 2.2, y: 2.5, z: -1.2 },
+        landing: { x: 4.2, y: 2.1, z: -0.2 }
+      }
+    ]
   }
 };
 
@@ -226,11 +301,20 @@ export const collectSunfly = (
     }
   });
 
+  const nextCollected = [...collected].sort((a, b) => a - b);
+  const currentCollected = progress.collectedSunflies[level.id];
+  if (
+    nextCollected.length === currentCollected.length &&
+    nextCollected.every((sunflyIndex, index) => sunflyIndex === currentCollected[index])
+  ) {
+    return progress;
+  }
+
   return {
     ...progress,
     collectedSunflies: {
       ...progress.collectedSunflies,
-      [level.id]: [...collected].sort((a, b) => a - b)
+      [level.id]: nextCollected
     }
   };
 };
@@ -263,3 +347,45 @@ export const isGripSurfaceActive = (
   progress: GameProgress,
   surface: PaintableSurface
 ): boolean => surface.kind === "grip-panel" && progress.paintedSurfaces[surface.id] === "green";
+
+export const isSentryDetection = (
+  sentry: Sentry,
+  player: PlayerState,
+  camouflagePaint?: PaintColor
+): boolean =>
+  isInsideBox(player.position, sentry.vision) && camouflagePaint !== sentry.requiredPaint;
+
+export const resetToCheckpoint = (player: PlayerState, sentry: Sentry): PlayerState => ({
+  ...player,
+  position: { ...sentry.checkpoint },
+  velocity: { x: 0, y: 0, z: 0 },
+  grounded: false
+});
+
+export const isTongueAnchorActive = (
+  progress: GameProgress,
+  level: LevelDefinition,
+  anchor: TongueAnchor
+): boolean => {
+  const surface = level.paintableSurfaces.find(
+    (candidate) => candidate.id === anchor.panelSurfaceId
+  );
+  if (!surface) return false;
+  return progress.paintedSurfaces[surface.id] === surface.requiredPaint;
+};
+
+export const useTongueAnchor = (
+  progress: GameProgress,
+  level: LevelDefinition,
+  player: PlayerState,
+  anchor: TongueAnchor
+): PlayerState => {
+  if (!isTongueAnchorActive(progress, level, anchor)) {
+    return player;
+  }
+  return {
+    ...player,
+    position: { ...anchor.landing },
+    velocity: { x: 0, y: 0, z: 0 }
+  };
+};
