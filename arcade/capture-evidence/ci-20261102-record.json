@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "workflowCommit": "aece993f617c42ec4b20ffeae5dd14fe272b9b12",
+  "sourceCommit": "ee78a98dcfeac3922fee300dda89631314d4e0d1",
+  "runId": "41423413878",
+  "url": "http://127.0.0.1:4258/",
+  "inputs": {
+    "index.html": "16e079fe793ce13cf91f22bc359ae9b86214e704f582f76f24c78fd209f5edd1",
+    "file-dist/assets/index-Co7iJer3.js": "1ba4b7b9c11fdbf8db2b1e1942b5ef7356769d1007a6d28f16b7f8cb24ddd673",
+    "file-dist/assets/index-Cwxf-1dU.css": "9009535b32293073091b4dd2e0d14444b564dee99ebcaa344362db40a9d8fc90"
+  },
+  "browser": "153.0.8010.12",
+  "viewport": {
+    "width": 1280,
+    "height": 1000
+  },
+  "screenshots": [
+    "meccha-openai-01.png",
+    "meccha-openai-02.png"
+  ]
+}

@@ -1,6 +1,47 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": "kata-meccha-chameleon-clone-codex-openai-gpt-5.5-light",
   "playUrl": "https://intrepion.github.io/kata-meccha-chameleon-clone-codex-openai-gpt-5.5-light/",
-  "screenshots": []
+  "screenshots": [
+    {
+      "path": "arcade/screenshots/ci-20261102-01.jpg",
+      "sha256": "017997c690549fd0efd07a4c112a7ebc570f9618ee5c29c625623ee300afc944",
+      "alt": "Meccha Chameleon gameplay, view 1",
+      "provenance": {
+        "kind": "ci_gameplay_capture",
+        "sourcePath": "arcade/capture-evidence/ci-20261102-01.png",
+        "sourceSha256": "bdd87ac8ca2acfe1bed8313779722332e4f26f6f33bbba107d0c526db98d6c73",
+        "captureCommit": "ee78a98dcfeac3922fee300dda89631314d4e0d1",
+        "workflowRunId": "41423413878",
+        "inputHashes": {
+          "index.html": "16e079fe793ce13cf91f22bc359ae9b86214e704f582f76f24c78fd209f5edd1",
+          "file-dist/assets/index-Co7iJer3.js": "1ba4b7b9c11fdbf8db2b1e1942b5ef7356769d1007a6d28f16b7f8cb24ddd673",
+          "file-dist/assets/index-Cwxf-1dU.css": "9009535b32293073091b4dd2e0d14444b564dee99ebcaa344362db40a9d8fc90"
+        },
+        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
+        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
+        "captureRecordSha256": "0959f80d42f9bf525320bab4638f2832cf5010aa8a47664558ea7e6dc6b25071"
+      }
+    },
+    {
+      "path": "arcade/screenshots/ci-20261102-02.jpg",
+      "sha256": "50b267d354569be6bfb600b246667d2d71e2f4243ab992bc830ddb15eefa158b",
+      "alt": "Meccha Chameleon gameplay, view 2",
+      "provenance": {
+        "kind": "ci_gameplay_capture",
+        "sourcePath": "arcade/capture-evidence/ci-20261102-02.png",
+        "sourceSha256": "81c8022fd32f5a332cc0e2a6ae3f229b3d0d7ce36a19dfb1751eadba3031eeda",
+        "captureCommit": "ee78a98dcfeac3922fee300dda89631314d4e0d1",
+        "workflowRunId": "41423413878",
+        "inputHashes": {
+          "index.html": "16e079fe793ce13cf91f22bc359ae9b86214e704f582f76f24c78fd209f5edd1",
+          "file-dist/assets/index-Co7iJer3.js": "1ba4b7b9c11fdbf8db2b1e1942b5ef7356769d1007a6d28f16b7f8cb24ddd673",
+          "file-dist/assets/index-Cwxf-1dU.css": "9009535b32293073091b4dd2e0d14444b564dee99ebcaa344362db40a9d8fc90"
+        },
+        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
+        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
+        "captureRecordSha256": "0959f80d42f9bf525320bab4638f2832cf5010aa8a47664558ea7e6dc6b25071"
+      }
+    }
+  ]
 }
