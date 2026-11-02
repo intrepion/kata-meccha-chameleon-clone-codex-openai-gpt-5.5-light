@@ -13,3 +13,7 @@
 - Double-click `src/vite-dev-entry.html` also launches the direct-file build.
 - Run `npm run dev` and open `/.vite-entry/index.html` for source development.
 - Run `npm run build:file` after source changes to refresh the direct-file bundle.
+
+## Arcade metadata
+
+See [docs/arcade-metadata.md](docs/arcade-metadata.md) for the game-owned manifest and screenshot provenance.
